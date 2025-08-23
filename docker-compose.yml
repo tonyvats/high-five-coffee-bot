@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    build: .
+    container_name: high-five-coffee-bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_IDS=${ADMIN_IDS}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge

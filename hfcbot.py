@@ -207,13 +207,21 @@ async def handle_make_order(message: types.Message):
 
 @router.message(lambda message: message.text == BACK_TEXT)
 async def go_back(message: types.Message, bot: Bot):
-    history = user_state.get(message.from_user.id, {}).get('history', [])
+    # Приоритетная обработка кнопки "Назад"
+    user_id = message.from_user.id
+    history = user_state.get(user_id, {}).get('history', [])
+    
     if not history:
         await ask_category(message, is_back=True)
         return
-    prev_step = history.pop() if history else 'wait_category'
-    user_state[message.from_user.id]['step'] = prev_step
-    state = user_state[message.from_user.id]
+    
+    prev_step = history.pop()
+    user_state[user_id]['step'] = prev_step
+    state = user_state[user_id]
+    
+    # Логируем для отладки
+    print(f"User {user_id} going back from {state.get('step')} to {prev_step}")
+    
     if prev_step == 'wait_category':
         await ask_category(message, is_back=True)
     elif prev_step == 'wait_summer_type':
