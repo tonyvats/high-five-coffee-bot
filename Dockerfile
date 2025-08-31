@@ -21,4 +21,4 @@ USER bot
 EXPOSE 8000
 
 # Запускаем бота
-CMD ["python", "hfcbot.py"]
+CMD ["python", "hfctbot.py"]

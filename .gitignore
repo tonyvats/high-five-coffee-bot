@@ -61,3 +61,5 @@ orders.json
 # Temporary files
 *.tmp
 *.temp
+
+hfcbot.py
