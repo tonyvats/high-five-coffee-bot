@@ -431,6 +431,9 @@ async def check_special(message: types.Message, bot: Bot, is_back=False):
         if not is_back:
             user_state[message.from_user.id]['history'].append('wait_size')
     else:
+        # Для обычных напитков (не чай, не альтернативное молоко) добавляем wait_size в историю
+        if not is_back:
+            user_state[message.from_user.id]['history'].append('wait_size')
         await ask_dopings(message, bot, is_back=is_back)
 
 @router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') == 'wait_tea_type' and message.text in tea_types)
