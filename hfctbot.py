@@ -490,23 +490,30 @@ async def get_name(message: types.Message, bot: Bot, is_back=False):
     if not is_back and message.text == BACK_TEXT:
         await go_back(message, bot)
         return
-    if not is_back:
-        user_state[message.from_user.id]['name'] = message.text
+    # Если пользователь вернулся на шаг ввода имени — повторно спросим имя и не пойдём дальше
+    if is_back:
+        await message.answer("Напиши своё имя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+        user_state[message.from_user.id]['step'] = 'wait_name'
+        return
+    user_state[message.from_user.id]['name'] = message.text
     await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
     user_state[message.from_user.id]['step'] = 'wait_card'
-    if not is_back:
-        user_state[message.from_user.id]['history'].append('wait_name')
+    user_state[message.from_user.id]['history'].append('wait_name')
 
 @router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') == 'wait_card')
 async def get_card(message: types.Message, bot: Bot, is_back=False):
     if not is_back and message.text == BACK_TEXT:
         await go_back(message, bot)
         return
-    if not is_back:
-        if not message.text.isdigit():
-            await message.answer("Пожалуйста, введите только цифры", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
-            return
-        user_state[message.from_user.id]['card'] = message.text
+    # Если вернулись на шаг ввода номера — повторно спросим номер и не пойдём дальше
+    if is_back:
+        await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+        user_state[message.from_user.id]['step'] = 'wait_card'
+        return
+    if not message.text.isdigit():
+        await message.answer("Пожалуйста, введите только цифры", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+        return
+    user_state[message.from_user.id]['card'] = message.text
     kb = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="10 минут")],
@@ -518,19 +525,30 @@ async def get_card(message: types.Message, bot: Bot, is_back=False):
     )
     await message.answer("Через сколько минут ты заберёшь свой кофе?", reply_markup=kb)
     user_state[message.from_user.id]['step'] = 'wait_time'
-    if not is_back:
-        user_state[message.from_user.id]['history'].append('wait_card')
+    user_state[message.from_user.id]['history'].append('wait_card')
 
 @router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') == 'wait_time' and "минут" in message.text)
 async def get_time(message: types.Message, bot: Bot, is_back=False):
     if not is_back and message.text == BACK_TEXT:
         await go_back(message, bot)
         return
-    if not is_back:
-        user_state[message.from_user.id]['time'] = message.text
+    # Если вернулись на шаг выбора времени — повторно покажем клавиатуру времени и не пойдём дальше
+    if is_back:
+        kb = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="10 минут")],
+                [KeyboardButton(text="20 минут")],
+                [KeyboardButton(text="30 минут")],
+                back_button()
+            ],
+            resize_keyboard=True
+        )
+        await message.answer("Через сколько минут ты заберёшь свой кофе?", reply_markup=kb)
+        user_state[message.from_user.id]['step'] = 'wait_time'
+        return
+    user_state[message.from_user.id]['time'] = message.text
     await ask_comment(message, bot, is_back=is_back)
-    if not is_back:
-        user_state[message.from_user.id]['history'].append('wait_time')
+    user_state[message.from_user.id]['history'].append('wait_time')
 
 async def ask_comment(message, bot: Bot, is_back=False):
     kb = ReplyKeyboardMarkup(
