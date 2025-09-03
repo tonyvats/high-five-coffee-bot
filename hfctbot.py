@@ -249,7 +249,18 @@ async def go_back(message: types.Message, bot: Bot):
     elif prev_step == 'wait_syrop':
         await ask_dopings(message, bot, is_back=True)
     elif prev_step == 'wait_name':
-        await get_name(message, bot, is_back=True)
+        # Возврат со шага имени:
+        # - Для категории "Кофе с молоком" возвращаемся к выбору добавок
+        # - Для особых случаев (чай/альтернативное молоко) возвращаемся к их выбору
+        # - Иначе возвращаемся к выбору размера
+        category = state.get('category')
+        drink = state.get('drink')
+        if category == "Кофе с молоком":
+            await ask_dopings(message, bot, is_back=True)
+        elif drink == "Чай листовой" or drink in ["Капучино на альтернативном молоке", "Матча на альтернативном молоке"]:
+            await check_special(message, bot, is_back=True)
+        else:
+            await choose_size_fake(message, bot, drink)
     elif prev_step == 'wait_card':
         await get_card(message, bot, is_back=True)
     elif prev_step == 'wait_time':
