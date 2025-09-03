@@ -262,7 +262,18 @@ async def go_back(message: types.Message, bot: Bot):
     #     else:
     #         await choose_size_fake(message, bot, drink)
     elif prev_step == 'wait_card':
-        await get_card(message, bot, is_back=True)
+        # Возврат со шага номера телефона/карты:
+        # - Для категории "Кофе с молоком" возвращаемся к выбору добавок
+        # - Для особых случаев (чай/альтернативное молоко) возвращаемся к их выбору
+        # - Иначе возвращаемся к выбору размера
+        category = state.get('category')
+        drink = state.get('drink')
+        if category == "Кофе с молоком":
+            await ask_dopings(message, bot, is_back=True)
+        elif drink == "Чай листовой" or drink in ["Капучино на альтернативном молоке", "Матча на альтернативном молоке"]:
+            await check_special(message, bot, is_back=True)
+        else:
+            await choose_size_fake(message, bot, drink)
     elif prev_step == 'wait_time':
         await get_time(message, bot, is_back=True)
     elif prev_step == 'wait_comment':
@@ -518,9 +529,9 @@ async def get_name(message: types.Message, bot: Bot, is_back=False):
     await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
     user_state[message.from_user.id]['step'] = 'wait_card'
     if not is_back:
-        # Пропускаем wait_name в истории, добавляем предыдущий шаг
-        prev_step = user_state[message.from_user.id]['history'][-1] if user_state[message.from_user.id]['history'] else 'wait_size'
-        user_state[message.from_user.id]['history'].append(prev_step)
+        # Пропускаем wait_name в истории, не добавляем ничего
+        # История уже содержит правильный предыдущий шаг
+        pass
 
 @router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') == 'wait_card')
 async def get_card(message: types.Message, bot: Bot, is_back=False):
