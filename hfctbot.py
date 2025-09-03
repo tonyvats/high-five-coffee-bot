@@ -368,8 +368,10 @@ async def summer_menu_finish_drink(message: types.Message, bot: Bot, is_back=Fal
     price = int(message.text.split('(')[1].split('₽')[0])
     user_state[message.from_user.id]['size'] = size
     user_state[message.from_user.id]['price'] = price
-    await message.answer("Напиши своё имя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
-    user_state[message.from_user.id]['step'] = 'wait_name'
+    # Пропускаем шаг имени, сразу переходим к вводу номера телефона/карты
+    user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
+    await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+    user_state[message.from_user.id]['step'] = 'wait_card'
     if not is_back:
         user_state[message.from_user.id]['history'].append('wait_summer_size')
 
@@ -450,7 +452,12 @@ async def after_alt_milk(message: types.Message, bot: Bot, is_back=False):
 async def ask_dopings(message, bot: Bot, is_back=False):
     drink = user_state[message.from_user.id]['drink']
     if user_state[message.from_user.id].get('category') != "Кофе с молоком":
-        await get_name(message, bot, is_back=is_back)
+        # Для не-молочных напитков сразу переходим к вводу номера телефона/карты
+        # НЕ добавляем wait_name в историю, так как этот шаг пропущен
+        user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
+        await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+        user_state[message.from_user.id]['step'] = 'wait_card'
+        # История уже содержит правильный предыдущий шаг (wait_size)
         return
     is_alt = drink in ["Капучино на альтернативном молоке", "Матча на альтернативном молоке"]
     kb = []
@@ -503,7 +510,11 @@ async def add_doping(message: types.Message, bot: Bot):
 
 @router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') in ['wait_doping', 'wait_syrop'] and message.text == "Нет, спасибо")
 async def finish_order(message: types.Message, bot: Bot):
-    await get_name(message, bot)
+    # Пропускаем шаг имени, сразу переходим к вводу номера телефона/карты
+    user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
+    await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+    user_state[message.from_user.id]['step'] = 'wait_card'
+    # История уже содержит правильный предыдущий шаг
 
 # --- Имя, карта, время, комментарий ---
 
