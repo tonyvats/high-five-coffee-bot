@@ -622,7 +622,7 @@ async def get_comment(message: types.Message, bot: Bot, is_back=False):
 async def send_order(message, bot):
     order = user_state[message.from_user.id]
     minutes = int(order['time'].split()[0])
-    ready_time = (datetime.now() + timedelta(minutes=minutes)).strftime("%H:%M")
+    ready_time = (datetime.now() + timedelta(minutes=minutes, hours=3)).strftime("%H:%M")
     if order.get('summer'):
         text = f"Летнее меню\nНапиток: {order['drink']}\nРазмер: {order['size']} мл ({order['price']}₽)"
     else:
@@ -635,7 +635,8 @@ async def send_order(message, bot):
             text += f"\nДополнительно: {', '.join(order['dopings'])}"
     if order.get('comment'):
         text += f"\nКомментарий: {order['comment']}"
-    text += f"\nИмя: {order['name']}\nКарта гостя: {order['card']}"
+    # text += f"\nИмя: {order['name']}\nКарта гостя: {order['card']}"
+    text += f"\nКарта гостя: {order['card']}"
     text_client = text + f"\nВремя готовности: {ready_time}"
     await message.answer("Спасибо☺️ Заказ принят:\n\n" + text_client, reply_markup=start_menu_keyboard())
     text_admin = text + f"\nЗаберёт через: {order['time']}\nВремя готовности: {ready_time}"
