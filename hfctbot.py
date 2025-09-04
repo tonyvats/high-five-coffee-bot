@@ -162,16 +162,16 @@ def back_button():
     return [KeyboardButton(text=BACK_TEXT)]
 
 def is_working_hours():
-    """Проверяет, работает ли кофейня в текущее время"""
+    """Проверяет, принимаются ли заказы в текущее время"""
     # Получаем текущее время в московском часовом поясе (UTC+3)
     current_time = datetime.now() + timedelta(hours=3)
     current_time_only = current_time.time()
     
-    # Время работы: с 9:50 до 22:00
-    opening_time = time(9, 50)  # 9:50
-    closing_time = time(22, 0)  # 22:00
+    # Прием заказов: с 9:50 до 21:30
+    order_start_time = time(9, 50)  # 9:50
+    order_end_time = time(21, 30)   # 21:30
     
-    return opening_time <= current_time_only <= closing_time
+    return order_start_time <= current_time_only <= order_end_time
 
 def start_menu_keyboard():
     return ReplyKeyboardMarkup(
@@ -207,7 +207,7 @@ async def ask_category(message: types.Message, is_back=False):
 async def start(message: types.Message):
     # Проверяем время работы
     if not is_working_hours():
-        await message.answer("Мы работаем с 9:50 до 22:00. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
+        await message.answer("Мы работаем с 10:00 до 22:00. Прием заказов с 9:50 до 21:30. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
         return
     
     user_state[message.from_user.id] = {}
@@ -218,7 +218,7 @@ async def start(message: types.Message):
 async def handle_make_order(message: types.Message):
     # Проверяем время работы
     if not is_working_hours():
-        await message.answer("Мы работаем с 9:50 до 22:00. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
+        await message.answer("Мы работаем с 10:00 до 22:00. Прием заказов с 9:50 до 21:30. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
         return
     
     user_state[message.from_user.id] = {}
@@ -677,7 +677,7 @@ async def send_order(message, bot):
 async def entry_point(message: types.Message, bot: Bot):
     # Проверяем время работы для всех сообщений
     if not is_working_hours():
-        await message.answer("Мы работаем с 9:50 до 22:00. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
+        await message.answer("Мы работаем с 10:00 до 22:00. Прием заказов с 9:50 до 21:30. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
         return
     
     user_id = message.from_user.id
