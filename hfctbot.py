@@ -370,7 +370,7 @@ async def summer_menu_finish_drink(message: types.Message, bot: Bot, is_back=Fal
     user_state[message.from_user.id]['price'] = price
     # Пропускаем шаг имени, сразу переходим к вводу номера телефона/карты
     user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
-    await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+    await message.answer("Введите полностью номер телефона:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
     user_state[message.from_user.id]['step'] = 'wait_card'
     if not is_back:
         user_state[message.from_user.id]['history'].append('wait_summer_size')
@@ -458,7 +458,7 @@ async def ask_dopings(message, bot: Bot, is_back=False):
         # Для не-молочных напитков сразу переходим к вводу номера телефона/карты
         # НЕ добавляем wait_name в историю, так как этот шаг пропущен
         user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
-        await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+        await message.answer("Введите полностью номер телефона:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
         user_state[message.from_user.id]['step'] = 'wait_card'
         # История уже содержит правильный предыдущий шаг (wait_size)
         return
@@ -515,7 +515,7 @@ async def add_doping(message: types.Message, bot: Bot):
 async def finish_order(message: types.Message, bot: Bot):
     # Пропускаем шаг имени, сразу переходим к вводу номера телефона/карты
     user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
-    await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+    await message.answer("Введите полностью номер телефона:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
     user_state[message.from_user.id]['step'] = 'wait_card'
     # История уже содержит правильный предыдущий шаг
 
@@ -532,7 +532,7 @@ async def finish_order(message: types.Message, bot: Bot):
 #         user_state[message.from_user.id]['step'] = 'wait_name'
 #         return
 #     user_state[message.from_user.id]['name'] = message.text
-#     await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+#     await message.answer("Введите полностью номер телефона:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
 #     user_state[message.from_user.id]['step'] = 'wait_card'
 #     user_state[message.from_user.id]['history'].append('wait_name')
 
@@ -540,7 +540,7 @@ async def finish_order(message: types.Message, bot: Bot):
 async def get_name(message: types.Message, bot: Bot, is_back=False):
     # Пропускаем шаг имени, сразу переходим к номеру телефона/карты
     user_state[message.from_user.id]['name'] = "Имя не указано"  # Временное значение
-    await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+    await message.answer("Введите полностью номер телефона:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
     user_state[message.from_user.id]['step'] = 'wait_card'
     if not is_back:
         # Пропускаем wait_name в истории, не добавляем ничего
@@ -554,11 +554,12 @@ async def get_card(message: types.Message, bot: Bot, is_back=False):
         return
     # Если вернулись на шаг ввода номера — повторно спросим номер и не пойдём дальше
     if is_back:
-        await message.answer("Укажи номер телефона или карты постоянного гостя:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+        await message.answer("Введите полностью номер телефона:", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
         user_state[message.from_user.id]['step'] = 'wait_card'
         return
-    if not message.text.isdigit():
-        await message.answer("Пожалуйста, введите только цифры", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
+    # Проверяем, что введены только цифры (11 цифр, начинается с 8 или 7)
+    if not message.text.isdigit() or len(message.text) != 11 or not (message.text.startswith('8') or message.text.startswith('7')):
+        await message.answer("Пожалуйста, введите номер телефона в формате 89099999999 или 79099999999 (11 цифр, начинается с 8 или 7)", reply_markup=ReplyKeyboardMarkup(keyboard=[back_button()], resize_keyboard=True))
         return
     user_state[message.from_user.id]['card'] = message.text
     kb = ReplyKeyboardMarkup(
@@ -636,7 +637,7 @@ async def send_order(message, bot):
     if order.get('comment'):
         text += f"\nКомментарий: {order['comment']}"
     # text += f"\nИмя: {order['name']}\nКарта гостя: {order['card']}"
-    text += f"\nКарта гостя: {order['card']}"
+    text += f"\nНомер телефона гостя: {order['card']}"
     text_client = text + f"\nВремя готовности: {ready_time}"
     await message.answer("Спасибо☺️ Заказ принят:\n\n" + text_client, reply_markup=start_menu_keyboard())
     text_admin = text + f"\nЗаберёт через: {order['time']}\nВремя готовности: {ready_time}"
