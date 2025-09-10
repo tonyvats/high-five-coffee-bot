@@ -153,6 +153,29 @@ dopings_full = [
 
 dopings_names = [d[0] for d in dopings_full]
 
+def calculate_total_price(order: dict) -> int:
+    """Возвращает итоговую стоимость заказа с учётом добавок.
+
+    Основано на финальном состоянии заказа: базовая цена напитка
+    (order['price']) плюс стоимость всех выбранных добавок из
+    order['dopings'].
+    """
+    base_price = int(order.get('price', 0))
+    dopings = order.get('dopings', []) or []
+
+    # Быстрый доступ к ценам добавок по имени
+    doping_price_by_name = {name: p for name, p in dopings_full}
+
+    total_extras = 0
+    for d in dopings:
+        # Сироп приходит как строка вида "Сироп: Ваниль" — считаем по цене "Сироп"
+        if isinstance(d, str) and d.startswith("Сироп"):
+            total_extras += doping_price_by_name.get("Сироп", 0)
+        else:
+            total_extras += doping_price_by_name.get(d, 0)
+
+    return base_price + total_extras
+
 user_state = {}
 router = Router()
 
@@ -646,6 +669,7 @@ async def send_order(message, bot):
     order = user_state[message.from_user.id]
     minutes = int(order['time'].split()[0])
     ready_time = (datetime.now() + timedelta(minutes=minutes, hours=3)).strftime("%H:%M")
+    total_price = calculate_total_price(order)
     if order.get('summer'):
         text = f"Летнее меню\nНапиток: {order['drink']}\nРазмер: {order['size']} мл ({order['price']}₽)"
     else:
@@ -656,6 +680,8 @@ async def send_order(message, bot):
             text += f"\nАльтернативное молоко: {order['alt_milk']}"
         if order.get('dopings'):
             text += f"\nДополнительно: {', '.join(order['dopings'])}"
+    # Общая стоимость для всех типов заказов
+    text += f"\nИтого: {total_price}₽"
     if order.get('comment'):
         text += f"\nКомментарий: {order['comment']}"
     # text += f"\nИмя: {order['name']}\nКарта гостя: {order['card']}"
