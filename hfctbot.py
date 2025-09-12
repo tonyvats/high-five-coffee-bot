@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, time
 API_TOKEN = '8247074222:AAHBww997RhstLFKr3t_MtnRQjU1P_YNfw8'
 
 ADMIN_IDS = [462076, 306535565, 57656547]
+TEAM_CHAT_IDS = [-1002318052349]
 
 syrops = [
     "Кокос", "Лесной орех", "Миндаль", "Фисташка", "Клён-каштан",
@@ -689,11 +690,12 @@ async def send_order(message, bot):
     text_client = text + f"\nВремя готовности: {ready_time}"
     await message.answer("Спасибо☺️ Заказ принят:\n\n" + text_client, reply_markup=start_menu_keyboard())
     text_admin = text + f"\nЗаберёт через: {order['time']}\nВремя готовности: {ready_time}"
-    for admin_id in ADMIN_IDS:
+    recipient_ids = ADMIN_IDS + TEAM_CHAT_IDS
+    for chat_id in recipient_ids:
         try:
-            await bot.send_message(admin_id, text_admin)
+            await bot.send_message(chat_id, text_admin)
         except Exception as e:
-            print(f"Не удалось отправить заказ {admin_id}: {e}")
+            print(f"Не удалось отправить заказ {chat_id}: {e}")
     user_state.pop(message.from_user.id, None)
     await ask_category(message)
 
