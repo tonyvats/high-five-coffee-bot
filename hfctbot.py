@@ -2,7 +2,7 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, BotCommand
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, BotCommand, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram import Router
 from datetime import datetime, timedelta, time
 
@@ -201,6 +201,7 @@ def start_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Сделать заказ")],
+            [KeyboardButton(text="🌐 Заказ через WebApp", web_app=WebAppInfo(url="http://localhost:8000/index.html"))],
         ],
         resize_keyboard=True
     )
@@ -700,6 +701,59 @@ async def send_order(message, bot):
     await ask_category(message)
 
 # --- Обработка любого сообщения вне заказа: всегда показываем меню ---
+
+@router.message(F.web_app_data)
+async def handle_webapp_data(message: types.Message, bot: Bot):
+    """Обработка данных от WebApp"""
+    try:
+        import json
+        order_data = json.loads(message.web_app_data.data)
+        
+        # Формируем текст заказа
+        if order_data.get('summer'):
+            text = f"Летнее меню\nНапиток: {order_data['drink']}\nРазмер: {order_data['size']} мл ({order_data['price']}₽)"
+        else:
+            text = f"Заказ:\nКатегория: {order_data.get('category', '')}\nНапиток: {order_data['drink']}\nРазмер: {order_data['size']} ({order_data['price']}₽)"
+            if order_data.get('teaType'):
+                text += f"\nСорт чая: {order_data['teaType']}"
+            if order_data.get('altMilk'):
+                text += f"\nАльтернативное молоко: {order_data['altMilk']}"
+            if order_data.get('dopings'):
+                text += f"\nДополнительно: {', '.join(order_data['dopings'])}"
+        
+        # Рассчитываем общую стоимость
+        total_price = order_data['price']
+        for doping_name in order_data.get('dopings', []):
+            doping = next((d for d in dopings_full if d[0] == doping_name), None)
+            if doping:
+                total_price += doping[1]
+        
+        text += f"\nИтого: {total_price}₽"
+        if order_data.get('comment'):
+            text += f"\nКомментарий: {order_data['comment']}"
+        text += f"\nНомер телефона гостя: {order_data['phone']}"
+        
+        # Время готовности
+        minutes = int(order_data['time'].split()[0])
+        ready_time = (datetime.now() + timedelta(minutes=minutes, hours=3)).strftime("%H:%M")
+        
+        text_client = text + f"\nВремя готовности: {ready_time}"
+        text_admin = text + f"\nЗаберёт через: {order_data['time']}\nВремя готовности: {ready_time}"
+        
+        # Отправляем клиенту
+        await message.answer("Спасибо☺️ Заказ принят:\n\n" + text_client, reply_markup=start_menu_keyboard())
+        
+        # Отправляем админам и в командный чат
+        recipient_ids = ADMIN_IDS + TEAM_CHAT_IDS
+        for chat_id in recipient_ids:
+            try:
+                await bot.send_message(chat_id, text_admin)
+            except Exception as e:
+                print(f"Не удалось отправить заказ {chat_id}: {e}")
+                
+    except Exception as e:
+        print(f"Ошибка обработки WebApp данных: {e}")
+        await message.answer("Произошла ошибка при обработке заказа. Попробуйте ещё раз.", reply_markup=start_menu_keyboard())
 
 @router.message()
 async def entry_point(message: types.Message, bot: Bot):

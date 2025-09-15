@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Order</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>☕ Coffee Order</h1>
+            <div class="order-info" id="orderInfo" style="display: none;">
+                <span id="orderSummary"></span>
+                <span id="orderPrice" class="price"></span>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Start Screen -->
+            <div id="startScreen" class="screen active">
+                <div class="welcome">
+                    <h2>Добро пожаловать!</h2>
+                    <p>Выберите категорию напитка</p>
+                </div>
+                <div class="menu-grid">
+                    <button class="menu-btn summer" onclick="showSummerMenu()">
+                        <span class="icon">🌞</span>
+                        <span>Летнее меню</span>
+                    </button>
+                    <button class="menu-btn" onclick="showCategory('Чёрный кофе')">
+                        <span class="icon">☕</span>
+                        <span>Чёрный кофе</span>
+                    </button>
+                    <button class="menu-btn" onclick="showCategory('Кофе с молоком')">
+                        <span class="icon">🥛</span>
+                        <span>Кофе с молоком</span>
+                    </button>
+                    <button class="menu-btn" onclick="showCategory('SWEET&CRAFT')">
+                        <span class="icon">🍰</span>
+                        <span>SWEET&CRAFT</span>
+                    </button>
+                    <button class="menu-btn" onclick="showCategory('Чай')">
+                        <span class="icon">🍵</span>
+                        <span>Чай</span>
+                    </button>
+                    <button class="menu-btn" onclick="showCategory('Детские напитки')">
+                        <span class="icon">🧸</span>
+                        <span>Детские напитки</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summer Menu Screen -->
+            <div id="summerScreen" class="screen">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">← Назад</button>
+                    <h2>Летнее меню</h2>
+                </div>
+                <div class="category-tabs">
+                    <button class="tab-btn active" onclick="showSummerCategory('Кофе')">Кофе</button>
+                    <button class="tab-btn" onclick="showSummerCategory('Чай')">Чай</button>
+                    <button class="tab-btn" onclick="showSummerCategory('Лимонады')">Лимонады</button>
+                </div>
+                <div id="summerDrinks" class="drinks-list"></div>
+            </div>
+
+            <!-- Category Screen -->
+            <div id="categoryScreen" class="screen">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">← Назад</button>
+                    <h2 id="categoryTitle">Категория</h2>
+                </div>
+                <div id="drinksList" class="drinks-list"></div>
+            </div>
+
+            <!-- Size Selection Screen -->
+            <div id="sizeScreen" class="screen">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">← Назад</button>
+                    <h2 id="drinkTitle">Напиток</h2>
+                </div>
+                <div class="size-options" id="sizeOptions"></div>
+            </div>
+
+            <!-- Special Options Screen -->
+            <div id="specialScreen" class="screen">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">← Назад</button>
+                    <h2 id="specialTitle">Дополнительно</h2>
+                </div>
+                <div id="specialOptions"></div>
+            </div>
+
+            <!-- Add-ons Screen -->
+            <div id="addonsScreen" class="screen">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">← Назад</button>
+                    <h2>Добавки</h2>
+                </div>
+                <div class="addons-list" id="addonsList"></div>
+                <button class="continue-btn" onclick="finishAddons()">Продолжить</button>
+            </div>
+
+            <!-- Contact Screen -->
+            <div id="contactScreen" class="screen">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">← Назад</button>
+                    <h2>Контактные данные</h2>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Номер телефона</label>
+                    <input type="tel" id="phone" placeholder="89099999999" maxlength="11">
+                </div>
+                <div class="form-group">
+                    <label for="time">Время готовности</label>
+                    <select id="time">
+                        <option value="10 минут">10 минут</option>
+                        <option value="20 минут">20 минут</option>
+                        <option value="30 минут">30 минут</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Комментарий (необязательно)</label>
+                    <textarea id="comment" placeholder="Особые пожелания..."></textarea>
+                </div>
+                <button class="order-btn" onclick="submitOrder()">Заказать</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
