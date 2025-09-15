@@ -201,7 +201,7 @@ def start_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Сделать заказ")],
-            [KeyboardButton(text="🌐 Заказ через WebApp", web_app=WebAppInfo(url="http://localhost:8000/index.html"))],
+            [KeyboardButton(text="🌐 Заказ через WebApp", web_app=WebAppInfo(url="https://curious-swan-008c4e.netlify.app/index.html"))],
         ],
         resize_keyboard=True
     )
