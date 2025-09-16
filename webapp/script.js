@@ -230,6 +230,7 @@ function selectSummerDrink(category, drink) {
 // Regular menu
 function showCategory(category) {
     order.category = category;
+    order.summer = false;
     document.getElementById('categoryTitle').textContent = category;
     
     const drinksContainer = document.getElementById('drinksList');
@@ -252,33 +253,48 @@ function selectDrink(drink) {
     order.drink = drink;
     
     if (order.summer) {
-        const sizes = summerMenu[order.category][drink];
-        showSizeSelection(sizes, true);
+        const summerSizes = summerMenu[order.category][drink];
+        showSizeSelection(summerSizes, true);
     } else {
-        const sizes = sizes[drink];
-        showSizeSelection(sizes, false);
+        const drinkSizes = sizes[drink];
+        showSizeSelection(drinkSizes, false);
     }
 }
 
-function showSizeSelection(sizes, isSummer) {
+function showSizeSelection(sizesInput, isSummer) {
     document.getElementById('drinkTitle').textContent = order.drink;
     
     const sizeContainer = document.getElementById('sizeOptions');
     sizeContainer.innerHTML = '';
     
-    Object.keys(sizes).forEach(size => {
-        const price = isSummer ? sizes[size] : prices[order.drink][size];
-        const sizeBtn = document.createElement('button');
-        sizeBtn.className = 'size-btn';
-        sizeBtn.innerHTML = `
-            <div class="size-info">
-                <div class="size-name">${size}${isSummer ? ' мл' : ''}</div>
-                <div class="size-price">${price}₽</div>
-            </div>
-        `;
-        sizeBtn.onclick = () => selectSize(size, price);
-        sizeContainer.appendChild(sizeBtn);
-    });
+    if (isSummer) {
+        Object.entries(sizesInput).forEach(([size, price]) => {
+            const sizeBtn = document.createElement('button');
+            sizeBtn.className = 'size-btn';
+            sizeBtn.innerHTML = `
+                <div class="size-info">
+                    <div class="size-name">${size} мл</div>
+                    <div class="size-price">${price}₽</div>
+                </div>
+            `;
+            sizeBtn.onclick = () => selectSize(size, price);
+            sizeContainer.appendChild(sizeBtn);
+        });
+    } else {
+        (sizesInput || []).forEach(size => {
+            const price = prices[order.drink][size];
+            const sizeBtn = document.createElement('button');
+            sizeBtn.className = 'size-btn';
+            sizeBtn.innerHTML = `
+                <div class="size-info">
+                    <div class="size-name">${size}</div>
+                    <div class="size-price">${price}₽</div>
+                </div>
+            `;
+            sizeBtn.onclick = () => selectSize(size, price);
+            sizeContainer.appendChild(sizeBtn);
+        });
+    }
     
     navigateTo('sizeScreen');
 }
@@ -358,7 +374,13 @@ function showAddons() {
             <span class="addon-name">${doping.name}</span>
             <span class="addon-price">${doping.price > 0 ? `+${doping.price}₽` : 'Бесплатно'}</span>
         `;
-        item.onclick = () => toggleAddon(doping, item);
+        item.onclick = () => {
+            if (doping.name === 'Сироп') {
+                showSyropFlavors();
+                return;
+            }
+            toggleAddon(doping, item);
+        };
         container.appendChild(item);
     });
     
@@ -378,6 +400,30 @@ function toggleAddon(doping, element) {
 
 function finishAddons() {
     showContactForm();
+}
+
+// Syrup selection
+function showSyropFlavors() {
+    const list = document.getElementById('syropList');
+    list.innerHTML = '';
+    syrops.forEach(flavor => {
+        const item = document.createElement('div');
+        item.className = 'addon-item';
+        item.innerHTML = `
+            <span class="addon-name">${flavor}</span>
+        `;
+        item.onclick = () => {
+            const fullName = `Сироп: ${flavor}`;
+            if (!order.dopings.includes(fullName)) {
+                order.dopings.push(fullName);
+            }
+            // вернуться к списку добавок
+            navigateTo('addonsScreen');
+            updateOrderInfo();
+        };
+        list.appendChild(item);
+    });
+    navigateTo('syropScreen');
 }
 
 function showContactForm() {
