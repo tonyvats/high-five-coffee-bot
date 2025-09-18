@@ -323,7 +323,9 @@ function showTeaTypes() {
     teaTypes.forEach(type => {
         const btn = document.createElement('button');
         btn.className = 'special-btn';
-        btn.textContent = type;
+        btn.innerHTML = `
+            <span class="special-name">${type}</span>
+        `;
         btn.onclick = () => selectTeaType(type);
         container.appendChild(btn);
     });
@@ -344,7 +346,9 @@ function showAltMilkTypes() {
     altMilkTypes.forEach(type => {
         const btn = document.createElement('button');
         btn.className = 'special-btn';
-        btn.textContent = type;
+        btn.innerHTML = `
+            <span class="special-name">${type}</span>
+        `;
         btn.onclick = () => selectAltMilk(type);
         container.appendChild(btn);
     });

@@ -261,14 +261,12 @@ body {
     background: #f8f8f8;
     border: 1px solid #e8e8e8;
     border-radius: 12px;
-    padding: 20px 16px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    text-align: center;
-    min-height: 100px;
 }
 
 .special-btn:hover {
@@ -283,9 +281,8 @@ body {
     border-color: #007aff;
 }
 
-.special-btn span:last-child {
-    font-weight: 600;
-    font-size: 14px;
+.special-btn .special-name {
+    font-weight: 500;
 }
 
 .addons-list {
@@ -410,9 +407,5 @@ body {
     
     .special-options {
         grid-template-columns: 1fr;
-    }
-    
-    .special-btn {
-        min-height: 80px;
     }
 }
