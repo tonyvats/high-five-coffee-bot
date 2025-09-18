@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, time
 API_TOKEN = '8247074222:AAHBww997RhstLFKr3t_MtnRQjU1P_YNfw8'
 
 ADMIN_IDS = [462076, 306535565, 57656547]
-TEAM_CHAT_IDS = [-1002318052349]
+TEAM_CHAT_IDS = [-1002318052349, -2902075036]
 
 syrops = [
     "Кокос", "Лесной орех", "Миндаль", "Фисташка", "Клён-каштан",
@@ -179,6 +179,11 @@ def calculate_total_price(order: dict) -> int:
 
 user_state = {}
 router = Router()
+
+# Функция для проверки, является ли чат командным
+def is_team_chat(chat_id):
+    """Проверяет, является ли чат командным чатом"""
+    return chat_id in TEAM_CHAT_IDS
 
 BACK_TEXT = "⬅️ Назад"
 
@@ -757,6 +762,10 @@ async def handle_webapp_data(message: types.Message, bot: Bot):
 
 @router.message()
 async def entry_point(message: types.Message, bot: Bot):
+    # Если это командный чат - не обрабатываем сообщения (но заказы туда отправляем)
+    if is_team_chat(message.chat.id):
+        return
+    
     # Проверяем время работы для всех сообщений
     if not is_working_hours():
         await message.answer("Мы работаем с 10:00 до 22:00. Прием заказов с 9:50 до 21:30. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
