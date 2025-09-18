@@ -319,12 +319,13 @@ function showTeaTypes() {
     document.getElementById('specialTitle').textContent = 'Выберите сорт чая';
     const container = document.getElementById('specialOptions');
     container.innerHTML = '';
+    container.className = 'addons-list'; // Используем класс addons-list
     
     teaTypes.forEach(type => {
-        const btn = document.createElement('button');
-        btn.className = 'special-btn';
+        const btn = document.createElement('div');
+        btn.className = 'addon-item';
         btn.innerHTML = `
-            <span class="special-name">${type}</span>
+            <span class="addon-name">${type}</span>
         `;
         btn.onclick = () => selectTeaType(type);
         container.appendChild(btn);
@@ -334,6 +335,14 @@ function showTeaTypes() {
 }
 
 function selectTeaType(type) {
+    // Убираем выделение с предыдущей кнопки
+    document.querySelectorAll('.addon-item').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Выделяем текущую кнопку
+    event.target.closest('.addon-item').classList.add('selected');
+    
     order.teaType = type;
     showAddons();
 }
@@ -342,12 +351,13 @@ function showAltMilkTypes() {
     document.getElementById('specialTitle').textContent = 'Выберите альтернативное молоко';
     const container = document.getElementById('specialOptions');
     container.innerHTML = '';
+    container.className = 'addons-list'; // Используем класс addons-list
     
     altMilkTypes.forEach(type => {
-        const btn = document.createElement('button');
-        btn.className = 'special-btn';
+        const btn = document.createElement('div');
+        btn.className = 'addon-item';
         btn.innerHTML = `
-            <span class="special-name">${type}</span>
+            <span class="addon-name">${type}</span>
         `;
         btn.onclick = () => selectAltMilk(type);
         container.appendChild(btn);
@@ -357,6 +367,14 @@ function showAltMilkTypes() {
 }
 
 function selectAltMilk(type) {
+    // Убираем выделение с предыдущей кнопки
+    document.querySelectorAll('.addon-item').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Выделяем текущую кнопку
+    event.target.closest('.addon-item').classList.add('selected');
+    
     order.altMilk = type;
     showAddons();
 }
