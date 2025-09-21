@@ -6,7 +6,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 from aiogram import Router
 from datetime import datetime, timedelta, time
 
-API_TOKEN = '8247074222:AAHBww997RhstLFKr3t_MtnRQjU1P_YNfw8'
+API_TOKEN = '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30'
 
 ADMIN_IDS = [462076, 306535565, 57656547]
 TEAM_CHAT_IDS = [-1002318052349, -2902075036]
@@ -774,6 +774,9 @@ async def entry_point(message: types.Message, bot: Bot):
     user_id = message.from_user.id
     if user_id not in user_state or user_state[user_id].get('step') is None:
         await ask_category(message)
+    else:
+        # Если пользователь в процессе заказа, но сообщение не обработано другими хендлерами
+        await message.answer("Пожалуйста, используйте кнопки для навигации по заказу.", reply_markup=start_menu_keyboard())
 
 async def main():
     logging.basicConfig(level=logging.INFO)
