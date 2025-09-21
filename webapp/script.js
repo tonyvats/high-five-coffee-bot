@@ -135,7 +135,12 @@ const teaTypes = [
 ];
 
 const altMilkTypes = [
-    "Овсяное", "Кокосовое", "Фундучное", "Миндальное", "Банановое", "Фисташковое"
+    { name: "Овсяное", price: 40 },
+    { name: "Кокосовое", price: 40 },
+    { name: "Фундучное", price: 40 },
+    { name: "Миндальное", price: 40 },
+    { name: "Банановое", price: 40 },
+    { name: "Фисташковое", price: 40 }
 ];
 
 const dopings = [
@@ -357,7 +362,8 @@ function showAltMilkTypes() {
         const btn = document.createElement('div');
         btn.className = 'addon-item';
         btn.innerHTML = `
-            <span class="addon-name">${type}</span>
+            <span class="addon-name">${type.name}</span>
+            <span class="addon-price">+${type.price}₽</span>
         `;
         btn.onclick = () => selectAltMilk(type);
         container.appendChild(btn);
@@ -375,7 +381,9 @@ function selectAltMilk(type) {
     // Выделяем текущую кнопку
     event.target.closest('.addon-item').classList.add('selected');
     
-    order.altMilk = type;
+    order.altMilk = type.name;
+    // Добавляем цену альтернативного молока к общей стоимости
+    order.price += type.price;
     showAddons();
 }
 
@@ -386,7 +394,7 @@ function showAddons() {
     const isAlt = order.drink === 'Капучино на альтернативном молоке' || order.drink === 'Матча на альтернативном молоке';
     
     dopings.forEach(doping => {
-        if (isAlt && altMilkTypes.includes(doping.name)) {
+        if (isAlt && altMilkTypes.some(milk => milk.name === doping.name)) {
             return; // Skip alt milk options for alt milk drinks
         }
         
