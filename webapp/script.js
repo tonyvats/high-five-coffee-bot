@@ -515,15 +515,18 @@ function updateOrderInfo() {
 function calculateTotalPrice() {
     let total = order.price || 0;
     order.dopings.forEach(dopingName => {
-        const doping = dopings.find(d => d.name === dopingName);
-        if (doping) {
-            // Для альтернативного молока используем динамическую цену
-            if (altMilkTypes.includes(dopingName.replace(' молоко', ''))) {
-                total += getAltMilkPrice(order.size);
-            } else if (dopingName === 'Сироп') {
-                total += getSyrupPrice(order.size);
-            } else {
-                total += doping.price;
+        // Сироп приходит как строка вида "Сироп: Ваниль" — считаем по цене "Сироп"
+        if (dopingName.startsWith("Сироп")) {
+            total += getSyrupPrice(order.size);
+        } else {
+            const doping = dopings.find(d => d.name === dopingName);
+            if (doping) {
+                // Для альтернативного молока используем динамическую цену
+                if (altMilkTypes.includes(dopingName.replace(' молоко', ''))) {
+                    total += getAltMilkPrice(order.size);
+                } else {
+                    total += doping.price;
+                }
             }
         }
     });

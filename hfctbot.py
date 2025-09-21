@@ -766,17 +766,19 @@ async def handle_webapp_data(message: types.Message, bot: Bot):
         # Рассчитываем общую стоимость
         total_price = order_data['price']
         for doping_name in order_data.get('dopings', []):
-            doping = next((d for d in dopings_full if d[0] == doping_name), None)
-            if doping:
-                # Для альтернативного молока и сиропа используем динамическую цену
-                if doping_name in [f"{milk} молоко" for milk in alt_milk_types]:
-                    size = order_data.get('size', 'S')
-                    total_price += get_alt_milk_price(size)
-                elif doping_name == "Сироп":
-                    size = order_data.get('size', 'S')
-                    total_price += get_syrup_price(size)
-                else:
-                    total_price += doping[1]
+            # Сироп приходит как строка вида "Сироп: Ваниль" — считаем по цене "Сироп"
+            if doping_name.startswith("Сироп"):
+                size = order_data.get('size', 'S')
+                total_price += get_syrup_price(size)
+            else:
+                doping = next((d for d in dopings_full if d[0] == doping_name), None)
+                if doping:
+                    # Для альтернативного молока используем динамическую цену
+                    if doping_name in [f"{milk} молоко" for milk in alt_milk_types]:
+                        size = order_data.get('size', 'S')
+                        total_price += get_alt_milk_price(size)
+                    else:
+                        total_price += doping[1]
         
         text += f"\nИтого: {total_price}₽"
         if order_data.get('comment'):
