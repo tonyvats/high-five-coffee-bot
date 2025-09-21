@@ -424,6 +424,18 @@ function showAddons() {
             price = getSyrupPrice(currentSize);
         }
         
+        // Проверяем, выбрана ли опция
+        let isSelected = false;
+        if (doping.name === 'Сироп') {
+            isSelected = order.dopings.some(d => d.startsWith('Сироп:'));
+        } else {
+            isSelected = order.dopings.includes(doping.name);
+        }
+        
+        if (isSelected) {
+            item.classList.add('selected');
+        }
+        
         item.innerHTML = `
             <span class="addon-name">${doping.name}</span>
             <span class="addon-price">${price > 0 ? `+${price}₽` : 'Бесплатно'}</span>
@@ -444,7 +456,12 @@ function showAddons() {
 function toggleAddon(doping, element, price) {
     if (element.classList.contains('selected')) {
         element.classList.remove('selected');
-        order.dopings = order.dopings.filter(d => d !== doping.name);
+        // Для сиропа нужно найти и удалить правильный элемент
+        if (doping.name === 'Сироп') {
+            order.dopings = order.dopings.filter(d => !d.startsWith('Сироп:'));
+        } else {
+            order.dopings = order.dopings.filter(d => d !== doping.name);
+        }
     } else {
         element.classList.add('selected');
         order.dopings.push(doping.name);
