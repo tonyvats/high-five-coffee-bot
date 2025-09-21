@@ -148,12 +148,19 @@ function getAltMilkPrice(size) {
     }
 }
 
+
 const dopings = [
     { name: "Сироп", price: 50 },
     { name: "Зефирки", price: 50 },
     { name: "Мёд", price: 50 },
     { name: "Доп. эспрессо", price: 60 },
     { name: "Безлактозное молоко", price: 30 },
+    { name: "Овсяное молоко", price: 0 }, // Динамическая цена
+    { name: "Кокосовое молоко", price: 0 }, // Динамическая цена
+    { name: "Фундучное молоко", price: 0 }, // Динамическая цена
+    { name: "Миндальное молоко", price: 0 }, // Динамическая цена
+    { name: "Банановое молоко", price: 0 }, // Динамическая цена
+    { name: "Фисташковое молоко", price: 0 }, // Динамическая цена
     { name: "Сахар", price: 0 },
     { name: "Корица", price: 0 }
 ];
@@ -357,24 +364,21 @@ function showAltMilkTypes() {
     container.innerHTML = '';
     container.className = 'addons-list'; // Используем класс addons-list
     
-    const currentSize = order.size;
-    const altMilkPrice = getAltMilkPrice(currentSize);
-    
     altMilkTypes.forEach(type => {
         const btn = document.createElement('div');
         btn.className = 'addon-item';
         btn.innerHTML = `
             <span class="addon-name">${type}</span>
-            <span class="addon-price">+${altMilkPrice}₽</span>
+            <span class="addon-price">Бесплатно</span>
         `;
-        btn.onclick = () => selectAltMilk(type, altMilkPrice);
+        btn.onclick = () => selectAltMilk(type);
         container.appendChild(btn);
     });
     
     navigateTo('specialScreen');
 }
 
-function selectAltMilk(type, price) {
+function selectAltMilk(type) {
     // Убираем выделение с предыдущей кнопки
     document.querySelectorAll('.addon-item').forEach(btn => {
         btn.classList.remove('selected');
@@ -384,8 +388,6 @@ function selectAltMilk(type, price) {
     event.target.closest('.addon-item').classList.add('selected');
     
     order.altMilk = type;
-    // Добавляем цену альтернативного молока к общей стоимости
-    order.price += price;
     showAddons();
 }
 
@@ -394,24 +396,32 @@ function showAddons() {
     container.innerHTML = '';
     
     const isAlt = order.drink === 'Капучино на альтернативном молоке' || order.drink === 'Матча на альтернативном молоке';
+    const currentSize = order.size;
     
     dopings.forEach(doping => {
-        if (isAlt && altMilkTypes.includes(doping.name)) {
+        if (isAlt && altMilkTypes.includes(doping.name.replace(' молоко', ''))) {
             return; // Skip alt milk options for alt milk drinks
         }
         
         const item = document.createElement('div');
         item.className = 'addon-item';
+        
+        // Определяем цену для альтернативного молока
+        let price = doping.price;
+        if (altMilkTypes.includes(doping.name.replace(' молоко', ''))) {
+            price = getAltMilkPrice(currentSize);
+        }
+        
         item.innerHTML = `
             <span class="addon-name">${doping.name}</span>
-            <span class="addon-price">${doping.price > 0 ? `+${doping.price}₽` : 'Бесплатно'}</span>
+            <span class="addon-price">${price > 0 ? `+${price}₽` : 'Бесплатно'}</span>
         `;
         item.onclick = () => {
             if (doping.name === 'Сироп') {
                 showSyropFlavors();
                 return;
             }
-            toggleAddon(doping, item);
+            toggleAddon(doping, item, price);
         };
         container.appendChild(item);
     });
@@ -419,7 +429,7 @@ function showAddons() {
     navigateTo('addonsScreen');
 }
 
-function toggleAddon(doping, element) {
+function toggleAddon(doping, element, price) {
     if (element.classList.contains('selected')) {
         element.classList.remove('selected');
         order.dopings = order.dopings.filter(d => d !== doping.name);
@@ -495,7 +505,12 @@ function calculateTotalPrice() {
     order.dopings.forEach(dopingName => {
         const doping = dopings.find(d => d.name === dopingName);
         if (doping) {
-            total += doping.price;
+            // Для альтернативного молока используем динамическую цену
+            if (altMilkTypes.includes(dopingName.replace(' молоко', ''))) {
+                total += getAltMilkPrice(order.size);
+            } else {
+                total += doping.price;
+            }
         }
     });
     return total;

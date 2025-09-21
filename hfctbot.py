@@ -147,12 +147,19 @@ def get_alt_milk_price(size):
     else:
         return 60
 
+
 dopings_full = [
     ("Сироп", 50),
     ("Зефирки", 50),
     ("Мёд", 50),
     ("Доп. эспрессо", 60),
     ("Безлактозное молоко", 30),
+    ("Овсяное молоко", 0),  # Динамическая цена
+    ("Кокосовое молоко", 0),  # Динамическая цена
+    ("Фундучное молоко", 0),  # Динамическая цена
+    ("Миндальное молоко", 0),  # Динамическая цена
+    ("Банановое молоко", 0),  # Динамическая цена
+    ("Фисташковое молоко", 0),  # Динамическая цена
     ("Сахар", 0),
     ("Корица", 0)
 ]
@@ -178,12 +185,12 @@ def calculate_total_price(order: dict) -> int:
         if isinstance(d, str) and d.startswith("Сироп"):
             total_extras += doping_price_by_name.get("Сироп", 0)
         else:
-            total_extras += doping_price_by_name.get(d, 0)
-
-    # Добавляем цену альтернативного молока если оно выбрано
-    if 'alt_milk' in order and order['alt_milk']:
-        size = order.get('size', 'S')
-        total_extras += get_alt_milk_price(size)
+            # Для альтернативного молока используем динамическую цену
+            if d in [f"{milk} молоко" for milk in alt_milk_types]:
+                size = order.get('size', 'S')
+                total_extras += get_alt_milk_price(size)
+            else:
+                total_extras += doping_price_by_name.get(d, 0)
 
     return base_price + total_extras
 
@@ -525,11 +532,16 @@ async def ask_dopings(message, bot: Bot, is_back=False):
         # История уже содержит правильный предыдущий шаг (wait_size)
         return
     is_alt = drink in ["Капучино на альтернативном молоке", "Матча на альтернативном молоке"]
+    size = user_state[message.from_user.id].get('size', 'S')
     kb = []
     for name, price in dopings_full:
-        if is_alt and name in alt_milk_types:
+        if is_alt and name in [f"{milk} молоко" for milk in alt_milk_types]:
             continue
-        if is_alt or price == 0:
+        # Для альтернативного молока используем динамическую цену
+        if name in [f"{milk} молоко" for milk in alt_milk_types]:
+            alt_price = get_alt_milk_price(size)
+            btn_text = f"{name} (+{alt_price}₽)"
+        elif price == 0:
             btn_text = name
         else:
             btn_text = f"{name} (+{price}₽)"
@@ -741,12 +753,12 @@ async def handle_webapp_data(message: types.Message, bot: Bot):
         for doping_name in order_data.get('dopings', []):
             doping = next((d for d in dopings_full if d[0] == doping_name), None)
             if doping:
-                total_price += doping[1]
-        
-        # Добавляем цену альтернативного молока если оно выбрано
-        if order_data.get('altMilk'):
-            size = order_data.get('size', 'S')
-            total_price += get_alt_milk_price(size)
+                # Для альтернативного молока используем динамическую цену
+                if doping_name in [f"{milk} молоко" for milk in alt_milk_types]:
+                    size = order_data.get('size', 'S')
+                    total_price += get_alt_milk_price(size)
+                else:
+                    total_price += doping[1]
         
         text += f"\nИтого: {total_price}₽"
         if order_data.get('comment'):
