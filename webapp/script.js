@@ -135,26 +135,25 @@ const teaTypes = [
 ];
 
 const altMilkTypes = [
-    { name: "Овсяное", price: 40 },
-    { name: "Кокосовое", price: 40 },
-    { name: "Фундучное", price: 40 },
-    { name: "Миндальное", price: 40 },
-    { name: "Банановое", price: 40 },
-    { name: "Фисташковое", price: 40 }
+    "Овсяное", "Кокосовое", "Фундучное", "Миндальное", "Банановое", "Фисташковое"
 ];
+
+// Функция для получения цены альтернативного молока в зависимости от размера
+function getAltMilkPrice(size) {
+    switch(size) {
+        case 'S': return 60;
+        case 'M': return 80;
+        case 'L': return 90;
+        default: return 60;
+    }
+}
 
 const dopings = [
     { name: "Сироп", price: 50 },
-    { name: "Зефирки", price: 30 },
-    { name: "Мёд", price: 30 },
+    { name: "Зефирки", price: 50 },
+    { name: "Мёд", price: 50 },
     { name: "Доп. эспрессо", price: 60 },
-    { name: "Безлактозное молоко", price: 40 },
-    { name: "Овсяное молоко", price: 40 },
-    { name: "Кокосовое молоко", price: 40 },
-    { name: "Фундучное молоко", price: 40 },
-    { name: "Миндальное молоко", price: 40 },
-    { name: "Банановое молоко", price: 40 },
-    { name: "Фисташковое молоко", price: 40 },
+    { name: "Безлактозное молоко", price: 30 },
     { name: "Сахар", price: 0 },
     { name: "Корица", price: 0 }
 ];
@@ -358,21 +357,24 @@ function showAltMilkTypes() {
     container.innerHTML = '';
     container.className = 'addons-list'; // Используем класс addons-list
     
+    const currentSize = order.size;
+    const altMilkPrice = getAltMilkPrice(currentSize);
+    
     altMilkTypes.forEach(type => {
         const btn = document.createElement('div');
         btn.className = 'addon-item';
         btn.innerHTML = `
-            <span class="addon-name">${type.name}</span>
-            <span class="addon-price">+${type.price}₽</span>
+            <span class="addon-name">${type}</span>
+            <span class="addon-price">+${altMilkPrice}₽</span>
         `;
-        btn.onclick = () => selectAltMilk(type);
+        btn.onclick = () => selectAltMilk(type, altMilkPrice);
         container.appendChild(btn);
     });
     
     navigateTo('specialScreen');
 }
 
-function selectAltMilk(type) {
+function selectAltMilk(type, price) {
     // Убираем выделение с предыдущей кнопки
     document.querySelectorAll('.addon-item').forEach(btn => {
         btn.classList.remove('selected');
@@ -381,9 +383,9 @@ function selectAltMilk(type) {
     // Выделяем текущую кнопку
     event.target.closest('.addon-item').classList.add('selected');
     
-    order.altMilk = type.name;
+    order.altMilk = type;
     // Добавляем цену альтернативного молока к общей стоимости
-    order.price += type.price;
+    order.price += price;
     showAddons();
 }
 
@@ -394,7 +396,7 @@ function showAddons() {
     const isAlt = order.drink === 'Капучино на альтернативном молоке' || order.drink === 'Матча на альтернативном молоке';
     
     dopings.forEach(doping => {
-        if (isAlt && altMilkTypes.some(milk => milk.name === doping.name)) {
+        if (isAlt && altMilkTypes.includes(doping.name)) {
             return; // Skip alt milk options for alt milk drinks
         }
         

@@ -136,18 +136,23 @@ alt_milk_types = [
     "Овсяное", "Кокосовое", "Фундучное", "Миндальное", "Банановое", "Фисташковое"
 ]
 
+def get_alt_milk_price(size):
+    """Возвращает цену альтернативного молока в зависимости от размера напитка"""
+    if size == 'S':
+        return 60
+    elif size == 'M':
+        return 80
+    elif size == 'L':
+        return 90
+    else:
+        return 60
+
 dopings_full = [
     ("Сироп", 50),
-    ("Зефирки", 30),
-    ("Мёд", 30),
+    ("Зефирки", 50),
+    ("Мёд", 50),
     ("Доп. эспрессо", 60),
-    ("Безлактозное молоко", 40),
-    ("Овсяное молоко", 40),
-    ("Кокосовое молоко", 40),
-    ("Фундучное молоко", 40),
-    ("Миндальное молоко", 40),
-    ("Банановое молоко", 40),
-    ("Фисташковое молоко", 40),
+    ("Безлактозное молоко", 30),
     ("Сахар", 0),
     ("Корица", 0)
 ]
@@ -502,6 +507,10 @@ async def after_alt_milk(message: types.Message, bot: Bot, is_back=False):
         await go_back(message, bot)
         return
     user_state[message.from_user.id]['alt_milk'] = message.text
+    # Добавляем цену альтернативного молока к базовой цене
+    size = user_state[message.from_user.id].get('size', 'S')
+    alt_milk_price = get_alt_milk_price(size)
+    user_state[message.from_user.id]['price'] += alt_milk_price
     await ask_dopings(message, bot, is_back=is_back)
 
 async def ask_dopings(message, bot: Bot, is_back=False):
@@ -732,6 +741,11 @@ async def handle_webapp_data(message: types.Message, bot: Bot):
             doping = next((d for d in dopings_full if d[0] == doping_name), None)
             if doping:
                 total_price += doping[1]
+        
+        # Добавляем цену альтернативного молока если оно выбрано
+        if order_data.get('altMilk'):
+            size = order_data.get('size', 'S')
+            total_price += get_alt_milk_price(size)
         
         text += f"\nИтого: {total_price}₽"
         if order_data.get('comment'):
