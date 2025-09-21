@@ -180,6 +180,11 @@ def calculate_total_price(order: dict) -> int:
         else:
             total_extras += doping_price_by_name.get(d, 0)
 
+    # Добавляем цену альтернативного молока если оно выбрано
+    if 'alt_milk' in order and order['alt_milk']:
+        size = order.get('size', 'S')
+        total_extras += get_alt_milk_price(size)
+
     return base_price + total_extras
 
 user_state = {}
@@ -507,10 +512,6 @@ async def after_alt_milk(message: types.Message, bot: Bot, is_back=False):
         await go_back(message, bot)
         return
     user_state[message.from_user.id]['alt_milk'] = message.text
-    # Добавляем цену альтернативного молока к базовой цене
-    size = user_state[message.from_user.id].get('size', 'S')
-    alt_milk_price = get_alt_milk_price(size)
-    user_state[message.from_user.id]['price'] += alt_milk_price
     await ask_dopings(message, bot, is_back=is_back)
 
 async def ask_dopings(message, bot: Bot, is_back=False):
