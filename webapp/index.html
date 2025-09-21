@@ -123,6 +123,10 @@
                     <input type="tel" id="phone" placeholder="89099999999" maxlength="11">
                 </div>
                 <div class="form-group">
+                    <label for="comment">Комментарий (необязательно)</label>
+                    <textarea id="comment" placeholder="Особые пожелания..."></textarea>
+                </div>
+                <div class="form-group">
                     <label for="time">Время готовности</label>
                     <select id="time">
                         <option value="10 минут">10 минут</option>
@@ -130,11 +134,20 @@
                         <option value="30 минут">30 минут</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="comment">Комментарий (необязательно)</label>
-                    <textarea id="comment" placeholder="Особые пожелания..."></textarea>
-                </div>
                 <button class="order-btn" onclick="submitOrder()">Заказать</button>
+            </div>
+
+            <!-- Closed Screen -->
+            <div id="closedScreen" class="screen">
+                <div class="screen-header">
+                    <h2>Мы сейчас закрыты</h2>
+                </div>
+                <div class="closed-message">
+                    <p>Мы работаем с 10:00 до 22:00</p>
+                    <p>Прием заказов с 9:50 до 21:30</p>
+                    <p>Ждем вас в рабочее время! ☕</p>
+                </div>
+                <button class="order-btn" onclick="checkWorkingHours()">Проверить время</button>
             </div>
         </main>
     </div>

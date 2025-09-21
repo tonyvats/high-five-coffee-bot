@@ -5,6 +5,20 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
+// Функция проверки рабочего времени
+function isWorkingHours() {
+    const now = new Date();
+    // Получаем текущее время в московском часовом поясе (UTC+3)
+    const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+    const currentTime = moscowTime.getHours() * 60 + moscowTime.getMinutes();
+    
+    // Прием заказов: с 9:50 до 21:30
+    const orderStartTime = 9 * 60 + 50; // 9:50
+    const orderEndTime = 21 * 60 + 30;  // 21:30
+    
+    return currentTime >= orderStartTime && currentTime <= orderEndTime;
+}
+
 // Order data
 let order = {
     category: '',
@@ -551,6 +565,11 @@ function calculateTotalPrice() {
 }
 
 function submitOrder() {
+    // Проверяем рабочее время перед отправкой заказа
+    if (!validateWorkingHours()) {
+        return;
+    }
+    
     const phone = document.getElementById('phone').value;
     const time = document.getElementById('time').value;
     const comment = document.getElementById('comment').value;
@@ -569,5 +588,24 @@ function submitOrder() {
     tg.close();
 }
 
+// Функция проверки рабочего времени и показа соответствующего экрана
+function checkWorkingHours() {
+    if (isWorkingHours()) {
+        showScreen('startScreen');
+    } else {
+        showScreen('closedScreen');
+    }
+}
+
+// Функция для проверки рабочего времени перед отправкой заказа
+function validateWorkingHours() {
+    if (!isWorkingHours()) {
+        showScreen('closedScreen');
+        return false;
+    }
+    return true;
+}
+
 // Initialize
+checkWorkingHours();
 updateOrderInfo();

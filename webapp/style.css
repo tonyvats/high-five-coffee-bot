@@ -376,3 +376,24 @@ body {
     
     /* Стили для special-options больше не нужны */
 }
+
+/* Closed Screen Styles */
+.closed-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.closed-message p {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #666666;
+}
+
+.closed-message p:first-child {
+    font-weight: 600;
+    color: #333333;
+    font-size: 18px;
+}
