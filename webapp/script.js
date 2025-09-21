@@ -588,14 +588,14 @@ function submitOrder() {
     tg.close();
 }
 
-// Функция проверки рабочего времени и показа соответствующего экрана
-function checkWorkingHours() {
-    if (isWorkingHours()) {
-        showScreen('startScreen');
-    } else {
-        showScreen('closedScreen');
-    }
-}
+// // Функция проверки рабочего времени и показа соответствующего экрана
+// function checkWorkingHours() {
+//     if (isWorkingHours()) {
+//         showScreen('startScreen');
+//     } else {
+//         showScreen('closedScreen');
+//     }
+// }
 
 // Функция для проверки рабочего времени перед отправкой заказа
 function validateWorkingHours() {
@@ -607,5 +607,5 @@ function validateWorkingHours() {
 }
 
 // Initialize
-checkWorkingHours();
+// checkWorkingHours();
 updateOrderInfo();
