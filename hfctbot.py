@@ -147,9 +147,20 @@ def get_alt_milk_price(size):
     else:
         return 60
 
+def get_syrup_price(size):
+    """Возвращает цену сиропа в зависимости от размера напитка"""
+    if size == 'S':
+        return 30
+    elif size == 'M':
+        return 35
+    elif size == 'L':
+        return 40
+    else:
+        return 30
+
 
 dopings_full = [
-    ("Сироп", 50),
+    ("Сироп", 0),  # Динамическая цена
     ("Зефирки", 50),
     ("Мёд", 50),
     ("Доп. эспрессо", 60),
@@ -183,7 +194,8 @@ def calculate_total_price(order: dict) -> int:
     for d in dopings:
         # Сироп приходит как строка вида "Сироп: Ваниль" — считаем по цене "Сироп"
         if isinstance(d, str) and d.startswith("Сироп"):
-            total_extras += doping_price_by_name.get("Сироп", 0)
+            size = order.get('size', 'S')
+            total_extras += get_syrup_price(size)
         else:
             # Для альтернативного молока используем динамическую цену
             if d in [f"{milk} молоко" for milk in alt_milk_types]:
@@ -537,10 +549,13 @@ async def ask_dopings(message, bot: Bot, is_back=False):
     for name, price in dopings_full:
         if is_alt and name in [f"{milk} молоко" for milk in alt_milk_types]:
             continue
-        # Для альтернативного молока используем динамическую цену
+        # Для альтернативного молока и сиропа используем динамическую цену
         if name in [f"{milk} молоко" for milk in alt_milk_types]:
             alt_price = get_alt_milk_price(size)
             btn_text = f"{name} (+{alt_price}₽)"
+        elif name == "Сироп":
+            syrup_price = get_syrup_price(size)
+            btn_text = f"{name} (+{syrup_price}₽)"
         elif price == 0:
             btn_text = name
         else:
@@ -753,10 +768,13 @@ async def handle_webapp_data(message: types.Message, bot: Bot):
         for doping_name in order_data.get('dopings', []):
             doping = next((d for d in dopings_full if d[0] == doping_name), None)
             if doping:
-                # Для альтернативного молока используем динамическую цену
+                # Для альтернативного молока и сиропа используем динамическую цену
                 if doping_name in [f"{milk} молоко" for milk in alt_milk_types]:
                     size = order_data.get('size', 'S')
                     total_price += get_alt_milk_price(size)
+                elif doping_name == "Сироп":
+                    size = order_data.get('size', 'S')
+                    total_price += get_syrup_price(size)
                 else:
                     total_price += doping[1]
         

@@ -148,9 +148,19 @@ function getAltMilkPrice(size) {
     }
 }
 
+// Функция для получения цены сиропа в зависимости от размера
+function getSyrupPrice(size) {
+    switch(size) {
+        case 'S': return 30;
+        case 'M': return 35;
+        case 'L': return 40;
+        default: return 30;
+    }
+}
+
 
 const dopings = [
-    { name: "Сироп", price: 50 },
+    { name: "Сироп", price: 0 }, // Динамическая цена
     { name: "Зефирки", price: 50 },
     { name: "Мёд", price: 50 },
     { name: "Доп. эспрессо", price: 60 },
@@ -406,10 +416,12 @@ function showAddons() {
         const item = document.createElement('div');
         item.className = 'addon-item';
         
-        // Определяем цену для альтернативного молока
+        // Определяем цену для альтернативного молока и сиропа
         let price = doping.price;
         if (altMilkTypes.includes(doping.name.replace(' молоко', ''))) {
             price = getAltMilkPrice(currentSize);
+        } else if (doping.name === 'Сироп') {
+            price = getSyrupPrice(currentSize);
         }
         
         item.innerHTML = `
@@ -508,6 +520,8 @@ function calculateTotalPrice() {
             // Для альтернативного молока используем динамическую цену
             if (altMilkTypes.includes(dopingName.replace(' молоко', ''))) {
                 total += getAltMilkPrice(order.size);
+            } else if (dopingName === 'Сироп') {
+                total += getSyrupPrice(order.size);
             } else {
                 total += doping.price;
             }
