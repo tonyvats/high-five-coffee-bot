@@ -130,11 +130,12 @@ def _moscow_now():
 
 
 def is_working_hours():
-    """Проверяет, принимаются ли заказы в текущее время (по Москве)."""
-    current_time_only = _moscow_now().time()
-    order_start_time = time(9, 50)
-    order_end_time = time(21, 30)
-    return order_start_time <= current_time_only <= order_end_time
+    """Проверяет, принимаются ли заказы в текущее время (по Москве).
+
+    ВРЕМЕННО отключено: всегда разрешаем приём заказов.
+    """
+    return True
+
 
 def start_menu_keyboard():
     return ReplyKeyboardMarkup(
