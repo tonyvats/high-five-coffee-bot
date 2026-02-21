@@ -689,37 +689,13 @@ async def main():
     await bot.set_my_commands([
         BotCommand(command="start", description="Сделать заказ")
     ])
-    
-    # Пробуем разные способы запуска
-    try:
-        # Способ 1: Обычный polling
-        await dp.start_polling(bot)
-    except Exception as e:
-        logging.error(f"First attempt failed: {e}")
-        try:
-            # Способ 2: С игнорированием старых сообщений
-            await bot.delete_webhook(drop_pending_updates=True)
-            await dp.start_polling(
-                bot,
-                drop_pending_updates=True,
-                allowed_updates=["message", "callback_query"]
-            )
-        except Exception as e2:
-            logging.error(f"Second attempt failed: {e2}")
-            try:
-                # Способ 3: С таймаутом
-                await dp.start_polling(
-                    bot,
-                    polling_timeout=60,
-                    drop_pending_updates=True
-                )
-            except Exception as e3:
-                logging.error(f"All attempts failed: {e3}")
-                print("❌ Не удалось запустить бота. Возможно, уже запущен другой экземпляр.")
-                print("💡 Попробуйте:")
-                print("   1. Остановить другой экземпляр бота")
-                print("   2. Создать нового бота через @BotFather")
-                print("   3. Подождать несколько минут")
+
+    # Убираем webhook, иначе polling не работает (Conflict)
+    await bot.delete_webhook(drop_pending_updates=True)
+    logging.info("Webhook удалён, запуск polling")
+
+    await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
