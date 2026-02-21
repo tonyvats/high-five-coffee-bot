@@ -17,10 +17,10 @@ from admin.database import get_menu_for_bot, init_db, seed_db
 load_dotenv()
 
 # Прод-токен по умолчанию. Локально в .env задают BOT_TOKEN с DEV-токеном.
-# API_TOKEN = os.environ.get('BOT_TOKEN', '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30')
+API_TOKEN = os.environ.get('BOT_TOKEN', '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30')
 from datetime import datetime, timedelta, time
 
-API_TOKEN = '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30'
+# API_TOKEN = '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30'
 
 # DEV-бот = локальная разработка (время без UTC+3)
 RUNNING_LOCAL = '8573322365' in str(API_TOKEN)
