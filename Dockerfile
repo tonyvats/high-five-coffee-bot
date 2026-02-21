@@ -14,7 +14,7 @@ COPY . .
 
 # Создаём пользователя для безопасности
 RUN useradd --create-home --shell /bin/bash bot
-RUN chown -R bot:bot /app
+RUN chown -R bot:bot /app && mkdir -p /data && chown -R bot:bot /data
 USER bot
 
 # Открываем порт для webhook (если понадобится)
