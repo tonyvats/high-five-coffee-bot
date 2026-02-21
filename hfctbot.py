@@ -1,208 +1,108 @@
 import asyncio
 import logging
+import sys
+import os
+from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, BotCommand, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, BotCommand, InlineKeyboardMarkup, InlineKeyboardButton  # WebAppInfo — для WebApp
 from aiogram import Router
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone
 
-API_TOKEN = '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30'
+# Добавляем корень проекта в sys.path для импорта admin.database
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from admin.database import get_menu_for_bot, init_db, seed_db
+
+# Загружаем .env — локально переопределяет токен на DEV
+load_dotenv()
+
+# Прод-токен по умолчанию. Локально в .env задают BOT_TOKEN с DEV-токеном.
+API_TOKEN = os.environ.get('BOT_TOKEN', '8247074222:AAEKMCOTzGl7QsSE3JmlMLjC1ClbiAkjw30')
+
+# DEV-бот = локальная разработка (время без UTC+3)
+RUNNING_LOCAL = '8573322365' in str(API_TOKEN)
 
 ADMIN_IDS = [462076, 306535565, 57656547]
 TEAM_CHAT_IDS = [-1002318052349, -2902075036]
 
-syrops = [
-    "Кокос", "Лесной орех", "Миндаль", "Фисташка", "Клён-каштан",
-    "Бобы тонка", "Ваниль", "Ириска", "Ирландский крем", "Карамель", "Лаванда", "Попкорн",
-    "Солёная карамель", "Сгущённое молоко", "Табак-ваниль", "Эвкалипт и мята", "Шоколад",
-    "Вишня", "Груша", "Ежевика", "Клубника & земляника", "Малина", "Чёрная смородина",
-    "Кашемировый персик", "Яблоко"
-]
+# ── Данные меню (загружаются из БД) ────────────────────────────
+menu = {}
+sizes = {}
+prices = {}
+summer_menu = {}
+syrops = []
+dopings_data = []   # [{name, price_s, price_m, price_l}, ...]
+dopings_names = []
+tea_types = []
+alt_milk_types = []
 
-summer_menu = {
-    "Кофе": {
-        "Карамельный айс латте со сливочно-солёной пенкой": {"450": 350},
-        "Бамбл со свежевыжатым соком": {"350": 390, "450": 440},
-        "Эспрессо тоник грейпфрут": {"350": 390, "450": 440},
-        "Колдбрю тёмный ром со сливочно-солёной пенкой": {"350": 350}
-    },
-    "Чай": {
-        "Яблочный сорбет матча латте": {"350": 280, "450": 310},
-        "Анчан матча латте кокос": {"450": 350},
-        "Персиковый чай с ромашкой": {"450": 330}
-    },
-    "Лимонады": {
-        "Лимонад манго-маракуйя": {"450": 330},
-        "Лимонад малина-маракуйя": {"450": 330},
-        "Лимонад чёрная смородина-мята": {"450": 280},
-        "Лимонад черника-мята": {"450": 280}
-    }
-}
 
-menu = {
-    "Чёрный кофе": [
-        "Эспрессо двойной", "Американо", "Фильтр", "Колдбрю", "Воронка V60", "Оранж кофе", "Черри фильтр"
-    ],
-    "Кофе с молоком": [
-        "Латте", "Капучино", "Капучино Крим", "Капучино на альтернативном молоке", "Флэт уайт",
-        "Ванильный раф", "Горячий шоколад", "Какао", "Пряное какао", "Какао солёная карамель"
-    ],
-    "SWEET&CRAFT": [
-        "Раф инжир и лаванда", "Раф малина и ваниль", "Латте голубика", "Латте абрикос-панела",
-        "Наткрекер свит капучино", "Апельсиновый мокко", "Белый шоколад"
-    ],
-    "Чай": [
-        "Чай листовой", "Ройбос с апельсином и мёдом", "Матча латте зелёный", "Анчан матча латте", "Матча на альтернативном молоке"
-    ],
-    "Детские напитки": [
-        "Какао с зефирками", "Детский латте"
-    ]
-}
+def load_menu():
+    """Загружает меню из БД в глобальные переменные."""
+    global menu, sizes, prices, summer_menu, syrops
+    global dopings_data, dopings_names
+    global tea_types, alt_milk_types
 
-sizes = {
-    "Эспрессо двойной": ["S"],
-    "Американо": ["S", "M", "L"],
-    "Фильтр": ["S", "M", "L"],
-    "Колдбрю": ["S", "M"],
-    "Воронка V60": ["S", "L"],
-    "Оранж кофе": ["S", "M", "L"],
-    "Черри фильтр": ["S", "M", "L"],
-    "Латте": ["M", "L"],
-    "Капучино": ["S", "M", "L"],
-    "Капучино Крим": ["S", "M", "L"],
-    "Капучино на альтернативном молоке": ["S", "M", "L"],
-    "Флэт уайт": ["S"],
-    "Ванильный раф": ["M", "L"],
-    "Горячий шоколад": ["S", "M", "L"],
-    "Какао": ["S", "M", "L"],
-    "Пряное какао": ["S", "M", "L"],
-    "Какао солёная карамель": ["S", "M", "L"],
-    "Раф инжир и лаванда": ["M", "L"],
-    "Раф малина и ваниль": ["M", "L"],
-    "Латте голубика": ["M", "L"],
-    "Латте абрикос-панела": ["M", "L"],
-    "Наткрекер свит капучино": ["M", "L"],
-    "Апельсиновый мокко": ["M", "L"],
-    "Белый шоколад": ["M", "L"],
-    "Чай листовой": ["M", "L"],
-    "Ройбос с апельсином и мёдом": ["M", "L"],
-    "Матча латте зелёный": ["S", "M", "L"],
-    "Анчан матча латте": ["S", "M", "L"],
-    "Матча на альтернативном молоке": ["S", "M", "L"],
-    "Какао с зефирками": ["S", "M", "L"],
-    "Детский латте": ["S", "M", "L"]
-}
+    data = get_menu_for_bot()
+    menu = data['menu']
+    sizes = data['sizes']
+    prices = data['prices']
+    summer_menu = data['summer_menu']
+    syrops = data['syrups']
+    tea_types = data['tea_types']
+    alt_milk_types = data['alt_milk_types']
+    dopings_data = data['dopings']
+    dopings_names = [d['name'] for d in dopings_data]
 
-prices = {
-    "Эспрессо двойной": {"S": 160},
-    "Американо": {"S": 180, "M": 210, "L": 240},
-    "Фильтр": {"S": 230, "M": 260, "L": 290},
-    "Колдбрю": {"S": 250, "M": 270},
-    "Воронка V60": {"S": 250, "L": 290},
-    "Оранж кофе": {"S": 250, "M": 280, "L": 310},
-    "Черри фильтр": {"S": 250, "M": 280, "L": 310},
-    "Латте": {"M": 255, "L": 280},
-    "Капучино": {"S": 230, "M": 260, "L": 290},
-    "Капучино Крим": {"S": 250, "M": 280, "L": 310},
-    "Капучино на альтернативном молоке": {"S": 290, "M": 340, "L": 380},
-    "Флэт уайт": {"S": 255},
-    "Ванильный раф": {"M": 280, "L": 330},
-    "Горячий шоколад": {"S": 290, "M": 310, "L": 340},
-    "Какао": {"S": 230, "M": 260, "L": 290},
-    "Пряное какао": {"S": 240, "M": 270, "L": 300},
-    "Какао солёная карамель": {"S": 260, "M": 295, "L": 330},
-    "Раф инжир и лаванда": {"M": 280, "L": 320},
-    "Раф малина и ваниль": {"M": 290, "L": 330},
-    "Латте голубика": {"M": 270, "L": 310},
-    "Латте абрикос-панела": {"M": 270, "L": 310},
-    "Наткрекер свит капучино": {"M": 310, "L": 350},
-    "Апельсиновый мокко": {"M": 290, "L": 330},
-    "Белый шоколад": {"M": 280, "L": 320},
-    "Чай листовой": {"M": 220, "L": 240},
-    "Ройбос с апельсином и мёдом": {"M": 240, "L": 260},
-    "Матча латте зелёный": {"S": 240, "M": 260, "L": 280},
-    "Анчан матча латте": {"S": 240, "M": 260, "L": 280},
-    "Матча на альтернативном молоке": {"S": 300, "M": 340, "L": 370},
-    "Какао с зефирками": {"S": 280, "M": 310, "L": 340},
-    "Детский латте": {"S": 180, "M": 200, "L": 220},
-}
 
-tea_types = [
-    "Чёрный с манго", "Зелёный с жасмином", "Эрл грей", "Каркаде вишнёвый",
-    "Таёжный с можжевельником", "Белый пион", "Сайган-дайля", "Пу-эр"
-]
+def get_doping_price(name, size='S'):
+    """Возвращает цену добавки для указанного размера."""
+    for d in dopings_data:
+        if d['name'] == name:
+            if size == 'L':
+                if size == 'L':
+                    return d['price_l']
+                elif size == 'M':
+                    return d['price_m']
+                else:
+                    return d['price_s']
+        return 0
 
-alt_milk_types = [
-    "Овсяное", "Кокосовое", "Фундучное", "Миндальное", "Банановое", "Фисташковое"
-]
-
-def get_alt_milk_price(size):
-    """Возвращает цену альтернативного молока в зависимости от размера напитка"""
-    if size == 'S':
-        return 60
-    elif size == 'M':
-        return 80
-    elif size == 'L':
-        return 90
-    else:
-        return 60
 
 def get_syrup_price(size):
-    """Возвращает цену сиропа в зависимости от размера напитка"""
-    if size == 'S':
-        return 30
-    elif size == 'M':
-        return 35
-    elif size == 'L':
-        return 40
-    else:
-        return 30
+    """Возвращает цену сиропа в зависимости от размера напитка."""
+    return get_doping_price('Сироп', size)
 
 
-dopings_full = [
-    ("Сироп", 0),  # Динамическая цена
-    ("Зефирки", 50),
-    ("Мёд", 50),
-    ("Доп. эспрессо", 60),
-    ("Безлактозное молоко", 30),
-    ("Овсяное молоко", 0),  # Динамическая цена
-    ("Кокосовое молоко", 0),  # Динамическая цена
-    ("Фундучное молоко", 0),  # Динамическая цена
-    ("Миндальное молоко", 0),  # Динамическая цена
-    ("Банановое молоко", 0),  # Динамическая цена
-    ("Фисташковое молоко", 0),  # Динамическая цена
-    ("Сахар", 0),
-    ("Корица", 0)
-]
-
-dopings_names = [d[0] for d in dopings_full]
+def get_alt_milk_price(size):
+    """Возвращает цену альтернативного молока в зависимости от размера."""
+    for d in dopings_data:
+        if d['name'].endswith(' молоко') and d['name'] != 'Безлактозное молоко':
+            if size == 'M':
+                return d['price_m']
+            elif size == 'L':
+                return d['price_l']
+            return d['price_s']
+    return 60  # fallback
 
 def calculate_total_price(order: dict) -> int:
     """Возвращает итоговую стоимость заказа с учётом добавок.
 
     Основано на финальном состоянии заказа: базовая цена напитка
     (order['price']) плюс стоимость всех выбранных добавок из
-    order['dopings'].
+    order['dopings'].  Цены добавок зависят от размера напитка.
     """
     base_price = int(order.get('price', 0))
     dopings = order.get('dopings', []) or []
-
-    # Быстрый доступ к ценам добавок по имени
-    doping_price_by_name = {name: p for name, p in dopings_full}
+    size = order.get('size', 'S')
 
     total_extras = 0
     for d in dopings:
         # Сироп приходит как строка вида "Сироп: Ваниль" — считаем по цене "Сироп"
         if isinstance(d, str) and d.startswith("Сироп"):
-            size = order.get('size', 'S')
-            total_extras += get_syrup_price(size)
+            total_extras += get_doping_price('Сироп', size)
         else:
-            # Для альтернативного молока используем динамическую цену
-            if d in [f"{milk} молоко" for milk in alt_milk_types]:
-                size = order.get('size', 'S')
-                total_extras += get_alt_milk_price(size)
-            else:
-                total_extras += doping_price_by_name.get(d, 0)
+            total_extras += get_doping_price(d, size)
 
     return base_price + total_extras
 
@@ -219,23 +119,25 @@ BACK_TEXT = "⬅️ Назад"
 def back_button():
     return [KeyboardButton(text=BACK_TEXT)]
 
+def _moscow_now():
+    """Текущее время по Москве. Локально — без +3, на сервере — UTC+3."""
+    if RUNNING_LOCAL:
+        return datetime.now()  # Mac уже в московском времени
+    return datetime.now(timezone.utc) + timedelta(hours=3)  # сервер в UTC
+
+
 def is_working_hours():
-    """Проверяет, принимаются ли заказы в текущее время"""
-    # Получаем текущее время в московском часовом поясе (UTC+3)
-    current_time = datetime.now() + timedelta(hours=3)
-    current_time_only = current_time.time()
-    
-    # Прием заказов: с 9:50 до 21:30
-    order_start_time = time(9, 50)  # 9:50
-    order_end_time = time(21, 30)   # 21:30
-    
+    """Проверяет, принимаются ли заказы в текущее время (по Москве)."""
+    current_time_only = _moscow_now().time()
+    order_start_time = time(9, 50)
+    order_end_time = time(21, 30)
     return order_start_time <= current_time_only <= order_end_time
 
 def start_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Сделать заказ")],
-            [KeyboardButton(text="🌐 Заказ через WebApp", web_app=WebAppInfo(url="https://curious-swan-008c4e.netlify.app/index.html"))],
+            # [KeyboardButton(text="🌐 Заказ через WebApp", web_app=WebAppInfo(url="https://curious-swan-008c4e.netlify.app/index.html"))],
         ],
         resize_keyboard=True
     )
@@ -269,6 +171,7 @@ async def start(message: types.Message):
         await message.answer("Мы работаем с 10:00 до 22:00. Прием заказов с 9:50 до 21:30. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
         return
     
+    load_menu()  # Обновляем меню из БД при каждом /start
     user_state[message.from_user.id] = {}
     user_state[message.from_user.id]['step'] = None
     await ask_category(message)
@@ -280,6 +183,7 @@ async def handle_make_order(message: types.Message):
         await message.answer("Мы работаем с 10:00 до 22:00. Прием заказов с 9:50 до 21:30. Ждем вас в рабочее время! ☕", reply_markup=start_menu_keyboard())
         return
     
+    load_menu()  # Обновляем меню из БД при каждом новом заказе
     user_state[message.from_user.id] = {}
     user_state[message.from_user.id]['step'] = 'wait_category'
     await ask_category(message)
@@ -546,20 +450,16 @@ async def ask_dopings(message, bot: Bot, is_back=False):
     is_alt = drink in ["Капучино на альтернативном молоке", "Матча на альтернативном молоке"]
     size = user_state[message.from_user.id].get('size', 'S')
     kb = []
-    for name, price in dopings_full:
+    for d in dopings_data:
+        name = d['name']
+        # Для альт. молочных напитков скрываем кнопки альт. молока
         if is_alt and name in [f"{milk} молоко" for milk in alt_milk_types]:
             continue
-        # Для альтернативного молока и сиропа используем динамическую цену
-        if name in [f"{milk} молоко" for milk in alt_milk_types]:
-            alt_price = get_alt_milk_price(size)
-            btn_text = f"{name} (+{alt_price}₽)"
-        elif name == "Сироп":
-            syrup_price = get_syrup_price(size)
-            btn_text = f"{name} (+{syrup_price}₽)"
-        elif price == 0:
-            btn_text = name
-        else:
+        price = get_doping_price(name, size)
+        if price > 0:
             btn_text = f"{name} (+{price}₽)"
+        else:
+            btn_text = name
         kb.append([KeyboardButton(text=btn_text)])
     kb.append([KeyboardButton(text="Нет, спасибо")])
     kb.append(back_button())
@@ -591,7 +491,7 @@ async def add_syrop(message: types.Message, bot: Bot, is_back=False):
     user_state[message.from_user.id]['dopings'].append(f"Сироп: {message.text}")
     await ask_dopings(message, bot, is_back=is_back)
 
-@router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') == 'wait_doping' and (message.text in [f"{d[0]} (+{d[1]}₽)" if d[1] > 0 else d[0] for d in dopings_full] or message.text in [d[0] for d in dopings_full]) and not message.text.startswith("Сироп"))
+@router.message(lambda message: user_state.get(message.from_user.id, {}).get('step') == 'wait_doping' and not message.text.startswith("Сироп") and message.text.split(" (+")[0] in dopings_names)
 async def add_doping(message: types.Message, bot: Bot):
     if message.text == BACK_TEXT:
         await go_back(message, bot)
@@ -712,7 +612,7 @@ async def get_comment(message: types.Message, bot: Bot, is_back=False):
 async def send_order(message, bot):
     order = user_state[message.from_user.id]
     minutes = int(order['time'].split()[0])
-    ready_time = (datetime.now() + timedelta(minutes=minutes, hours=3)).strftime("%H:%M")
+    ready_time = (_moscow_now() + timedelta(minutes=minutes)).strftime("%H:%M")
     total_price = calculate_total_price(order)
     if order.get('summer'):
         text = f"Летнее меню\nНапиток: {order['drink']}\nРазмер: {order['size']} мл ({order['price']}₽)"
@@ -744,68 +644,16 @@ async def send_order(message, bot):
 
 # --- Обработка любого сообщения вне заказа: всегда показываем меню ---
 
-@router.message(F.web_app_data)
-async def handle_webapp_data(message: types.Message, bot: Bot):
-    """Обработка данных от WebApp"""
-    try:
-        import json
-        order_data = json.loads(message.web_app_data.data)
-        
-        # Формируем текст заказа
-        if order_data.get('summer'):
-            text = f"Летнее меню\nНапиток: {order_data['drink']}\nРазмер: {order_data['size']} мл ({order_data['price']}₽)"
-        else:
-            text = f"Заказ:\nКатегория: {order_data.get('category', '')}\nНапиток: {order_data['drink']}\nРазмер: {order_data['size']} ({order_data['price']}₽)"
-            if order_data.get('teaType'):
-                text += f"\nСорт чая: {order_data['teaType']}"
-            if order_data.get('altMilk'):
-                text += f"\nАльтернативное молоко: {order_data['altMilk']}"
-            if order_data.get('dopings'):
-                text += f"\nДополнительно: {', '.join(order_data['dopings'])}"
-        
-        # Рассчитываем общую стоимость
-        total_price = order_data['price']
-        for doping_name in order_data.get('dopings', []):
-            # Сироп приходит как строка вида "Сироп: Ваниль" — считаем по цене "Сироп"
-            if doping_name.startswith("Сироп"):
-                size = order_data.get('size', 'S')
-                total_price += get_syrup_price(size)
-            else:
-                doping = next((d for d in dopings_full if d[0] == doping_name), None)
-                if doping:
-                    # Для альтернативного молока используем динамическую цену
-                    if doping_name in [f"{milk} молоко" for milk in alt_milk_types]:
-                        size = order_data.get('size', 'S')
-                        total_price += get_alt_milk_price(size)
-                    else:
-                        total_price += doping[1]
-        
-        text += f"\nИтого: {total_price}₽"
-        if order_data.get('comment'):
-            text += f"\nКомментарий: {order_data['comment']}"
-        text += f"\nНомер телефона гостя: {order_data['phone']}"
-        
-        # Время готовности
-        minutes = int(order_data['time'].split()[0])
-        ready_time = (datetime.now() + timedelta(minutes=minutes, hours=3)).strftime("%H:%M")
-        
-        text_client = text + f"\nВремя готовности: {ready_time}"
-        text_admin = text + f"\nЗаберёт через: {order_data['time']}\nВремя готовности: {ready_time}"
-        
-        # Отправляем клиенту
-        await message.answer("Спасибо☺️ Заказ принят:\n\n" + text_client, reply_markup=start_menu_keyboard())
-        
-        # Отправляем админам и в командный чат
-        recipient_ids = ADMIN_IDS + TEAM_CHAT_IDS
-        for chat_id in recipient_ids:
-            try:
-                await bot.send_message(chat_id, text_admin)
-            except Exception as e:
-                print(f"Не удалось отправить заказ {chat_id}: {e}")
-                
-    except Exception as e:
-        print(f"Ошибка обработки WebApp данных: {e}")
-        await message.answer("Произошла ошибка при обработке заказа. Попробуйте ещё раз.", reply_markup=start_menu_keyboard())
+# @router.message(F.web_app_data)
+# async def handle_webapp_data(message: types.Message, bot: Bot):
+#     """Обработка данных от WebApp"""
+#     try:
+#         import json
+#         order_data = json.loads(message.web_app_data.data)
+#         ...
+#     except Exception as e:
+#         print(f"Ошибка обработки WebApp данных: {e}")
+#         await message.answer("Произошла ошибка при обработке заказа. Попробуйте ещё раз.", reply_markup=start_menu_keyboard())
 
 @router.message()
 async def entry_point(message: types.Message, bot: Bot):
@@ -827,6 +675,14 @@ async def entry_point(message: types.Message, bot: Bot):
 
 async def main():
     logging.basicConfig(level=logging.INFO)
+
+    # Инициализируем БД и загружаем меню
+    init_db()
+    seed_db()
+    load_menu()
+    logging.info("Меню загружено из БД (%d категорий, %d напитков)",
+                 len(menu), sum(len(v) for v in menu.values()))
+
     bot = Bot(token=API_TOKEN)
     dp = Dispatcher()
     dp.include_router(router)

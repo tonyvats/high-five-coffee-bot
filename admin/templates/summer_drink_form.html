@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Редактировать' if drink else 'Добавить' }} летний напиток{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('summer_categories') }}">Летнее меню</a></li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('summer_drinks', cat_id=category.id) }}">{{ category.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">{{ 'Редактировать' if drink else 'Новый напиток' }}</li>
+    </ol>
+</nav>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h4 class="card-title mb-4">
+            {{ 'Редактировать напиток' if drink else 'Добавить напиток' }}
+        </h4>
+
+        <form method="POST">
+            <div class="mb-4">
+                <label class="form-label fw-medium">Название напитка</label>
+                <input type="text" class="form-control form-control-lg" name="name"
+                       value="{{ drink.name if drink else '' }}"
+                       placeholder="Например: Лимонад манго-маракуйя" required>
+            </div>
+
+            <h5 class="mb-3">Размеры (мл) и цены</h5>
+            <p class="text-muted small mb-3">Укажите объём в миллилитрах и цену. Можно добавить несколько размеров.</p>
+
+            <div id="sizesContainer">
+                {% if sizes %}
+                    {% for s in sizes %}
+                    <div class="row align-items-center mb-3 size-row">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="size_ml"
+                                       value="{{ s.size_ml }}" placeholder="Объём" min="1" required>
+                                <span class="input-group-text">мл</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="size_price"
+                                       value="{{ s.price }}" placeholder="Цена" min="0" required>
+                                <span class="input-group-text">₽</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSize(this)">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="row align-items-center mb-3 size-row">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="size_ml"
+                                       placeholder="Объём" min="1" required>
+                                <span class="input-group-text">мл</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="size_price"
+                                       placeholder="Цена" min="0" required>
+                                <span class="input-group-text">₽</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSize(this)">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="button" class="btn btn-outline-primary btn-sm mb-4" onclick="addSize()">
+                <i class="bi bi-plus-lg me-1"></i>Добавить размер
+            </button>
+
+            <div class="d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>{{ 'Сохранить' if drink else 'Добавить' }}
+                </button>
+                <a href="{{ url_for('summer_drinks', cat_id=category.id) }}" class="btn btn-outline-secondary btn-lg">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addSize() {
+    const container = document.getElementById('sizesContainer');
+    const row = document.createElement('div');
+    row.className = 'row align-items-center mb-3 size-row';
+    row.innerHTML = `
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="number" class="form-control" name="size_ml"
+                       placeholder="Объём" min="1" required>
+                <span class="input-group-text">мл</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="number" class="form-control" name="size_price"
+                       placeholder="Цена" min="0" required>
+                <span class="input-group-text">₽</span>
+            </div>
+        </div>
+        <div class="col-auto">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSize(this)">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(row);
+}
+
+function removeSize(btn) {
+    const rows = document.querySelectorAll('.size-row');
+    if (rows.length > 1) {
+        btn.closest('.size-row').remove();
+    }
+}
+</script>
+{% endblock %}

@@ -5,18 +5,33 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Функция проверки рабочего времени
-function isWorkingHours() {
+// Текущее время по Москве (работает в любом часовом поясе устройства)
+function getMoscowMinutes() {
     const now = new Date();
-    // Получаем текущее время в московском часовом поясе (UTC+3)
-    const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
-    const currentTime = moscowTime.getHours() * 60 + moscowTime.getMinutes();
-    
-    // Прием заказов: с 9:50 до 21:30
-    const orderStartTime = 9 * 60 + 50; // 9:50
-    const orderEndTime = 21 * 60 + 30;  // 21:30
-    
-    return currentTime >= orderStartTime && currentTime <= orderEndTime;
+    try {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Moscow',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+        const parts = formatter.formatToParts(now);
+        const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
+        const minute = parseInt(parts.find(p => p.type === 'minute').value, 10);
+        return hour * 60 + minute;
+    } catch (e) {
+        // Fallback: UTC+3 (если Intl не поддерживает timeZone)
+        const moscowMs = now.getTime() + 3 * 60 * 60 * 1000;
+        const h = Math.floor((moscowMs / (60 * 60 * 1000)) % 24);
+        const m = Math.floor((moscowMs / (60 * 1000)) % 60);
+        return h * 60 + m;
+    }
+}
+
+// Рабочие часы: 9:50–21:30 по Москве
+function isWorkingHours() {
+    const currentTime = getMoscowMinutes();
+    return currentTime >= (9 * 60 + 50) && currentTime <= (21 * 60 + 30);
 }
 
 // Order data

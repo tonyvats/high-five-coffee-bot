@@ -5,15 +5,37 @@ services:
     build: .
     container_name: high-five-coffee-bot
     restart: unless-stopped
+    command: python hfctbot.py
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - ADMIN_IDS=${ADMIN_IDS}
+      - MENU_DB_PATH=/data/menu.db
     volumes:
-      - ./logs:/app/logs
+      - menu-data:/data
     ports:
       - "8000:8000"
     networks:
       - bot-network
+
+  admin:
+    build: .
+    container_name: high-five-coffee-admin
+    restart: unless-stopped
+    command: python -m admin.app
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_SECRET_KEY=${ADMIN_SECRET_KEY:-hfc-admin-secret-change-in-production}
+      - MENU_DB_PATH=/data/menu.db
+      - ADMIN_PORT=5050
+    volumes:
+      - menu-data:/data
+    ports:
+      - "5050:5050"
+    networks:
+      - bot-network
+
+volumes:
+  menu-data:
 
 networks:
   bot-network:

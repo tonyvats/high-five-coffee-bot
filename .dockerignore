@@ -1,0 +1,15 @@
+venv/
+.env
+.env.*
+__pycache__/
+*.py[cod]
+*.log
+logs/
+.git/
+.gitignore
+*.md
+menu.db
+start_local.sh
+stop_local.sh
+run_both_bots.sh
+hfcbot.py

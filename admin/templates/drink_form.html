@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Редактировать' if drink else 'Добавить' }} напиток{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('categories') }}">Основное меню</a></li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('category_drinks', cat_id=category.id) }}">{{ category.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">{{ 'Редактировать' if drink else 'Новый напиток' }}</li>
+    </ol>
+</nav>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h4 class="card-title mb-4">
+            {{ 'Редактировать напиток' if drink else 'Добавить напиток' }}
+        </h4>
+
+        <form method="POST">
+            <div class="mb-4">
+                <label class="form-label fw-medium">Название напитка</label>
+                <input type="text" class="form-control form-control-lg" name="name"
+                       value="{{ drink.name if drink else '' }}" placeholder="Например: Капучино" required>
+            </div>
+
+            <h5 class="mb-3">Размеры и цены</h5>
+            <p class="text-muted small mb-3">Отметьте доступные размеры и укажите цену для каждого.</p>
+
+            {% for sz, label in [('S', 'S — Маленький'), ('M', 'M — Средний'), ('L', 'L — Большой')] %}
+            <div class="row align-items-center mb-3 p-3 rounded-3 {% if sz in sizes %}bg-primary bg-opacity-10{% else %}bg-light{% endif %}">
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="size_{{ sz }}_enabled"
+                               id="size_{{ sz }}" value="1"
+                               {% if sz in sizes %}checked{% endif %}
+                               onchange="toggleSizePrice('{{ sz }}')">
+                        <label class="form-check-label fw-medium" for="size_{{ sz }}">{{ label }}</label>
+                    </div>
+                </div>
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group">
+                        <input type="number" class="form-control" name="size_{{ sz }}_price"
+                               id="price_{{ sz }}" min="0"
+                               value="{{ sizes.get(sz, '') }}"
+                               placeholder="Цена"
+                               {% if sz not in sizes %}disabled{% endif %}>
+                        <span class="input-group-text">₽</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>{{ 'Сохранить' if drink else 'Добавить' }}
+                </button>
+                <a href="{{ url_for('category_drinks', cat_id=category.id) }}" class="btn btn-outline-secondary btn-lg">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleSizePrice(size) {
+    const checkbox = document.getElementById('size_' + size);
+    const priceInput = document.getElementById('price_' + size);
+    const row = checkbox.closest('.row');
+    if (checkbox.checked) {
+        priceInput.disabled = false;
+        priceInput.focus();
+        row.classList.add('bg-primary', 'bg-opacity-10');
+        row.classList.remove('bg-light');
+    } else {
+        priceInput.disabled = true;
+        priceInput.value = '';
+        row.classList.remove('bg-primary', 'bg-opacity-10');
+        row.classList.add('bg-light');
+    }
+}
+</script>
+{% endblock %}

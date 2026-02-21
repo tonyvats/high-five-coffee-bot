@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Обзор{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📊 Обзор меню</h2>
+
+<div class="row g-3">
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-grid"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.categories }}</div>
+                        <div class="stat-label">Категорий</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-cup-hot"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.drinks }}</div>
+                        <div class="stat-label">Напитков</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-sun"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.summer_drinks }}</div>
+                        <div class="stat-label">Летних напитков</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-droplet"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.syrups }}</div>
+                        <div class="stat-label">Сиропов</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-plus-circle"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.dopings }}</div>
+                        <div class="stat-label">Добавок</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-secondary bg-opacity-10 text-secondary">
+                        <i class="bi bi-flower1"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.tea_types }}</div>
+                        <div class="stat-label">Сортов чая</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-cup-straw"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="stat-value">{{ stats.alt_milk }}</div>
+                        <div class="stat-label">Видов альт. молока</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Быстрые ссылки</h5>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('categories') }}" class="btn btn-outline-primary">
+                <i class="bi bi-cup-hot me-1"></i>Основное меню
+            </a>
+            <a href="{{ url_for('summer_categories') }}" class="btn btn-outline-warning">
+                <i class="bi bi-sun me-1"></i>Летнее меню
+            </a>
+            <a href="{{ url_for('syrups') }}" class="btn btn-outline-info">
+                <i class="bi bi-droplet me-1"></i>Сиропы
+            </a>
+            <a href="{{ url_for('dopings') }}" class="btn btn-outline-danger">
+                <i class="bi bi-plus-circle me-1"></i>Добавки
+            </a>
+            <a href="{{ url_for('tea_types') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-flower1 me-1"></i>Сорта чая
+            </a>
+            <a href="{{ url_for('alt_milk') }}" class="btn btn-outline-primary">
+                <i class="bi bi-cup-straw me-1"></i>Альт. молоко
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
